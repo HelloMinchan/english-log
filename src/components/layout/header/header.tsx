@@ -8,7 +8,7 @@ interface HeaderProps {
 
 export function Header({ children }: HeaderProps) {
   const toHome = () => {
-    window.location.href = '/'
+    window.location.href = '/english-log'
   }
 
   return (

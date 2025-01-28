@@ -9,6 +9,8 @@ export enum HttpMethod {
 export enum TextType {
   WORD = 'word',
   SENTENCE = 'sentence',
+  INTEGRATION = 'integration',
+  WRONG = 'wrong',
 }
 
 export enum SupabaseErrorCode {

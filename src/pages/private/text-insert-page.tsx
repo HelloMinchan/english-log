@@ -5,6 +5,7 @@ import { TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel 
 import { DebouncedButton } from '../../components'
 import { isErrorToastOpenState, errorToastMessageState, isSuccessToastOpenState, successToastMessageState } from '../../store'
 import { useSetRecoilState, SetterOrUpdater } from 'recoil'
+import { getKoreanToday } from '../../util'
 
 export function TextInsertPage() {
   const [text, setText] = useState('')
@@ -22,6 +23,7 @@ export function TextInsertPage() {
           text: text,
           meaning: meaning,
           type: type,
+          created_at: getKoreanToday(),
         },
       ])
 
@@ -61,7 +63,13 @@ export function TextInsertPage() {
             <FormControlLabel value={TextType.SENTENCE} control={<Radio />} label="문장" />
           </RadioGroup>
         </FormControl>
-        <DebouncedButton text={'저장하기'} variant="contained" onClick={handleSave} fullWidth sx={{ fontSize: '20px', height: '50px' }} />
+        <DebouncedButton
+          text={'저장하기'}
+          variant="contained"
+          onClick={handleSave}
+          fullWidth
+          sx={{ fontSize: '20px', height: '50px', backgroundColor: '#ff7f00' }}
+        />
       </InputContainer>
     </Container>
   )

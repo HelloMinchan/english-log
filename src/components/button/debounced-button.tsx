@@ -3,7 +3,7 @@ import { fromEvent } from 'rxjs'
 import { debounceTime } from 'rxjs/operators'
 import Button from '@mui/material/Button'
 
-export const DebouncedButton = ({ text, onClick, variant, sx }: any) => {
+export const DebouncedButton = ({ text, onClick, variant, sx, disabled }: any) => {
   const buttonRef: any = useRef(null)
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export const DebouncedButton = ({ text, onClick, variant, sx }: any) => {
   }, [onClick])
 
   return (
-    <Button ref={buttonRef} variant={variant} sx={sx}>
+    <Button ref={buttonRef} variant={variant} sx={sx} disabled={disabled}>
       {text}
     </Button>
   )
