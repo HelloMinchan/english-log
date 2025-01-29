@@ -199,13 +199,21 @@ export function TestDetailPage() {
           </StatusBar>
 
           <StyledCard>
-            <CardContent style={{ height: '200px' }}>
-              <div style={{ height: '50%', overflowY: 'auto' }}>
+            <CardContent style={{ height: '250px' }}>
+              <div
+                style={{
+                  height: '55%',
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  wordWrap: 'break-word',
+                  whiteSpace: 'normal',
+                }}
+              >
                 <Typography variant="h6" component="div" gutterBottom style={{ height: '40%' }}>
                   {logs[currentIndex].text}
                 </Typography>
               </div>
-              <div style={{ height: '50%', overflowY: 'auto', marginTop: '10px', borderTop: '1px solid #eee' }}>
+              <div style={{ height: '45%', overflowY: 'auto', marginTop: '10px', borderTop: '1px solid #eee' }}>
                 <ShowAnswerButton variant="text" onClick={() => setShowMeaning(true)} sx={{ width: '100%' }}>
                   {!showMeaning ? (
                     '답 보기'
@@ -295,7 +303,7 @@ const Container = styled.div`
   align-items: center;
 
   min-height: 100vh;
-  padding: 140px 20px 0px;
+  padding: 100px 20px 0px;
   gap: 20px;
 `
 
@@ -303,7 +311,6 @@ const HeaderContainer = styled.div`
   width: 100%;
   max-width: 500px;
   text-align: center;
-  margin-bottom: 20px;
 `
 
 const CardContainer = styled.div`
