@@ -3,11 +3,14 @@ import { useEffect, useState } from 'react'
 import { supabase, TextType } from '../../api'
 import { useRecoilValue } from 'recoil'
 import { logTypeState, logCreatedAtState } from '../../store'
-import { Card, CardContent, Button, Typography, Box } from '@mui/material'
+import { Card, CardContent, Button, Typography, Box, Modal, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useNavigate } from 'react-router-dom'
 import { DebouncedButton } from '../../components'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
+import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 
 export function TestDetailPage() {
   const [logs, setLogs] = useState<any[]>([])
@@ -19,6 +22,10 @@ export function TestDetailPage() {
   const logType = useRecoilValue(logTypeState)
   const logCreatedAt = useRecoilValue(logCreatedAtState)
   const navigate = useNavigate()
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [editText, setEditText] = useState('')
+  const [editMeaning, setEditMeaning] = useState('')
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -106,17 +113,64 @@ export function TestDetailPage() {
     }
   }
 
+  const handleEdit = async () => {
+    try {
+      const { error } = await supabase.from('log').update({ text: editText, meaning: editMeaning }).eq('id', logs[currentIndex].id)
+
+      if (error) {
+        console.error('데이터 수정 실패:', error)
+        return
+      }
+
+      const updatedLogs = [...logs]
+      updatedLogs[currentIndex] = { ...updatedLogs[currentIndex], text: editText, meaning: editMeaning }
+      setLogs(updatedLogs)
+      setIsEditModalOpen(false)
+    } catch (error) {
+      console.error('데이터 수정 중 오류 발생:', error)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase.from('log').delete().eq('id', logs[currentIndex].id)
+
+      if (error) {
+        console.error('데이터 삭제 실패:', error)
+        return
+      }
+
+      const updatedLogs = logs.filter((_, index) => index !== currentIndex)
+      setLogs(updatedLogs)
+      if (currentIndex >= updatedLogs.length) {
+        setCurrentIndex(updatedLogs.length - 1)
+      }
+      setIsDeleteModalOpen(false)
+    } catch (error) {
+      console.error('데이터 삭제 중 오류 발생:', error)
+    }
+  }
+
+  const speakText = (text: string) => {
+    if (!text.trim()) return
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'en-US'
+    utterance.rate = 1.0
+    speechSynthesis.speak(utterance)
+  }
+
   return (
     <Container>
       <HeaderContainer>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h5" gutterBottom>
           {getTestTypeText(logType)}
         </Typography>
-        <Typography variant="h5" gutterBottom>
+        <Typography variant="h6" gutterBottom>
           일자 : {logCreatedAt ? logCreatedAt : '전체'}
         </Typography>
         {logs.length > 0 && !isCompleted && (
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h5" gutterBottom>
             ({currentIndex + 1} / {logs.length})
           </Typography>
         )}
@@ -124,20 +178,44 @@ export function TestDetailPage() {
 
       {logs.length > 0 && !isCompleted && (
         <CardContainer>
+          <StatusBar>
+            <EditDeleteButtons>
+              <IconButton
+                onClick={() => {
+                  setEditText(logs[currentIndex].text)
+                  setEditMeaning(logs[currentIndex].meaning)
+                  setIsEditModalOpen(true)
+                }}
+              >
+                <EditIcon />
+              </IconButton>
+              <IconButton onClick={() => setIsDeleteModalOpen(true)}>
+                <DeleteIcon />
+              </IconButton>
+            </EditDeleteButtons>
+            <IconButton>
+              <VolumeUpIcon onClick={() => speakText(logs[currentIndex].text)} />
+            </IconButton>
+          </StatusBar>
+
           <StyledCard>
-            <CardContent>
-              <Typography variant="h5" component="div" gutterBottom>
-                {logs[currentIndex].text}
-              </Typography>
-              <ShowAnswerButton variant="text" onClick={() => setShowMeaning(true)} sx={{ width: '100%', mt: 2, pt: 2, borderTop: '1px solid #eee' }}>
-                {!showMeaning ? (
-                  '답 보기'
-                ) : (
-                  <Typography variant="body1" color="text.secondary">
-                    {logs[currentIndex].meaning}
-                  </Typography>
-                )}
-              </ShowAnswerButton>
+            <CardContent style={{ height: '200px' }}>
+              <div style={{ height: '50%', overflowY: 'auto' }}>
+                <Typography variant="h6" component="div" gutterBottom style={{ height: '40%' }}>
+                  {logs[currentIndex].text}
+                </Typography>
+              </div>
+              <div style={{ height: '50%', overflowY: 'auto', marginTop: '10px', borderTop: '1px solid #eee' }}>
+                <ShowAnswerButton variant="text" onClick={() => setShowMeaning(true)} sx={{ width: '100%' }}>
+                  {!showMeaning ? (
+                    '답 보기'
+                  ) : (
+                    <Typography variant="body1" color="text.secondary">
+                      {logs[currentIndex].meaning}
+                    </Typography>
+                  )}
+                </ShowAnswerButton>
+              </div>
             </CardContent>
           </StyledCard>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mt: 2 }}>
@@ -154,6 +232,37 @@ export function TestDetailPage() {
               sx={{ width: '50%', height: '70px', fontSize: '35px', fontWeight: 'bold', backgroundColor: '#4caf50' }}
             />
           </Box>
+
+          {/* Edit Modal */}
+          <Modal open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
+            <ModalContent>
+              <Typography variant="h6" gutterBottom>
+                텍스트 수정
+              </Typography>
+              <TextField fullWidth label="텍스트" value={editText} onChange={(e) => setEditText(e.target.value)} margin="normal" />
+              <TextField fullWidth label="의미" value={editMeaning} onChange={(e) => setEditMeaning(e.target.value)} margin="normal" />
+              <ModalButtons>
+                <Button onClick={() => setIsEditModalOpen(false)}>취소</Button>
+                <Button onClick={handleEdit} variant="contained">
+                  확인
+                </Button>
+              </ModalButtons>
+            </ModalContent>
+          </Modal>
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog open={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
+            <DialogTitle>삭제 확인</DialogTitle>
+            <DialogContent>
+              <Typography>정말로 삭제하시겠습니까?</Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setIsDeleteModalOpen(false)}>취소</Button>
+              <Button onClick={handleDelete} color="error">
+                삭제
+              </Button>
+            </DialogActions>
+          </Dialog>
         </CardContainer>
       )}
 
@@ -229,4 +338,45 @@ const ShowAnswerButton = styled(Button)`
       background-color: transparent;
     }
   }
+`
+
+const StatusBar = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+`
+
+const EditDeleteButtons = styled.div`
+  display: flex;
+  gap: 8px;
+`
+
+const IconButton = styled(Button)`
+  && {
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+  }
+`
+
+const ModalContent = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+`
+
+const ModalButtons = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
 `
