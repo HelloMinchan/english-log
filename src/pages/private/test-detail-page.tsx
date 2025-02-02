@@ -11,6 +11,7 @@ import { DebouncedButton } from '../../components'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import VolumeUpIcon from '@mui/icons-material/VolumeUp'
+import { reverseTestState } from '../../store/setting'
 
 export function TestDetailPage() {
   const [logs, setLogs] = useState<any[]>([])
@@ -26,6 +27,7 @@ export function TestDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [editText, setEditText] = useState('')
   const [editMeaning, setEditMeaning] = useState('')
+  const reverseTest = useRecoilValue(reverseTestState)
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -210,7 +212,7 @@ export function TestDetailPage() {
                 }}
               >
                 <Typography variant="h6" component="div" gutterBottom style={{ height: '40%' }}>
-                  {logs[currentIndex].text}
+                  {reverseTest ? logs[currentIndex].meaning : logs[currentIndex].text}
                 </Typography>
               </div>
               <div style={{ height: '45%', overflowY: 'auto', marginTop: '10px', borderTop: '1px solid #eee' }}>
@@ -219,7 +221,7 @@ export function TestDetailPage() {
                     '답 보기'
                   ) : (
                     <Typography variant="body1" color="text.secondary">
-                      {logs[currentIndex].meaning}
+                      {reverseTest ? logs[currentIndex].text : logs[currentIndex].meaning}
                     </Typography>
                   )}
                 </ShowAnswerButton>
